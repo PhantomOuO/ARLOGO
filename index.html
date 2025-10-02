@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>公司 Logo WebAR（門口展示）</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <style>
+    html,body{margin:0;height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans TC,PingFang TC,Helvetica Neue,Arial,sans-serif;background:#000;color:#fff}
+    .app{position:fixed;inset:0;display:grid;grid-template-rows:1fr auto}
+    .ui{padding:10px env(safe-area-inset-right) 12px env(safe-area-inset-left);background:linear-gradient(to top,rgba(0,0,0,.55),rgba(0,0,0,.2));backdrop-filter:saturate(180%) blur(8px);display:grid;gap:10px}
+    .row{display:grid;grid-auto-flow:column;gap:10px;grid-auto-columns:1fr}
+    .btn{appearance:none;border:0;border-radius:999px;padding:12px 14px;background:#fff;color:#111;font-weight:700}
+    .btn.ghost{background:rgba(255,255,255,.2);color:#fff}
+    .note{font-size:12px;opacity:.85}
+    .brand{position:fixed;left:12px;top:12px;background:rgba(0,0,0,.45);backdrop-filter:saturate(180%) blur(8px);padding:6px 10px;border-radius:999px;font-weight:700}
+    .tips{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.55);padding:10px 14px;border-radius:12px;font-size:14px;display:none}
+  </style>
+  <!-- model-viewer：跨 iOS/Android 的 WebAR（呼叫 AR Quick Look / Scene Viewer / WebXR） -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+<body>
+  <div class="brand">公司 Logo WebAR</div>
+
+  <!--
+    使用方式：
+    1) 把 /assets/company_logo.glb 與 /assets/company_logo.usdz 放到相同位置（或調整下方 src 與 ios-src）
+    2) 建議模型單位為「公尺」，匯出時模型高度做成 1.7（公尺）即可實尺呈現；若不是，下面有快速比例鍵可微調。
+  -->
+  <model-viewer id="viewer"
+    style="width:100%;height:100%;background:#000"
+    src="assets/company_logo.glb"
+    ios-src="assets/company_logo.usdz"
+    ar ar-modes="webxr scene-viewer quick-look"
+    ar-placement="floor"
+    camera-controls
+    disable-zoom
+    exposure="1.0"
+    shadow-intensity="0.6"
+    environment-image="neutral"
+    poster=""
+    autoplay
+  >
+    <button slot="ar-button" class="btn" id="arBtn">在實境中查看</button>
+    <div id="unsupported" class="tips">裝置未支援 WebAR，改用 3D 檢視。</div>
+  </model-viewer>
+
+  <div class="app" aria-hidden="true" style="pointer-events:none">
+    <div></div>
+    <div class="ui" style="pointer-events:auto">
+      <div class="row">
+        <button class="btn" data-scale="1">實尺（1.0x）</button>
+        <button class="btn ghost" data-scale="0.9">縮小（0.9x）</button>
+        <button class="btn ghost" data-scale="1.1">放大（1.1x）</button>
+      </div>
+      <div class="row">
+        <button class="btn ghost" data-scale="0.88">150cm</button>
+        <button class="btn ghost" data-scale="1.00">170cm</button>
+        <button class="btn ghost" data-scale="1.18">200cm</button>
+      </div>
+      <div class="note">提示：點「在實境中查看」→ 將手機對著地面移動，待出現平面後放置 Logo。若高度/大小與期待不符，可點上方比例快速鍵微調。</div>
+    </div>
+  </div>
+
+  <script>
+    const mv = document.getElementById('viewer');
+    const tips = document.getElementById('unsupported');
+    const arBtn = document.getElementById('arBtn');
+
+    // 檢測是否支援 AR
+    (async () => {
+      const canAR = await mv.canActivateAR;
+      if (!canAR) tips.style.display = 'block';
+    })();
+
+    // 快速比例鍵（用於微調到「看起來像真人大小」）
+    document.querySelectorAll('[data-scale]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const s = parseFloat(btn.dataset.scale);
+        // 直接設定整體 scale；若 GLB 已是公尺實尺，預設 1 即可
+        mv.scale = `${s} ${s} ${s}`;
+      });
+    });
+
+    // iOS AR Quick Look：自動開啟時如需 lock scale，可在 USDZ 側處理；此處僅提供快速鍵
+    // Android Scene Viewer / WebXR 同理，盡量以模型輸出尺寸為主，再用微調鍵校準。
+  </script>
+</body>
+</html>
