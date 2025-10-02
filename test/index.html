@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR 相機展示</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <style>
+    html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans TC;}
+    .app{position:fixed;inset:0;display:grid;grid-template-rows:1fr auto}
+    .ui{padding:10px;backdrop-filter:saturate(180%) blur(8px);background:rgba(0,0,0,.4);display:grid;gap:10px}
+    .row{display:grid;grid-auto-flow:column;gap:10px;grid-auto-columns:1fr}
+    .btn{appearance:none;border:0;border-radius:999px;padding:12px 14px;background:#fff;color:#111;font-weight:700}
+    .btn.ghost{background:rgba(255,255,255,.2);color:#fff}
+    .note{font-size:12px;opacity:.85}
+    .brand{position:fixed;left:12px;top:12px;background:rgba(0,0,0,.45);backdrop-filter:saturate(180%) blur(8px);padding:6px 10px;border-radius:999px;font-weight:700}
+    .tips{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.55);padding:10px 14px;border-radius:12px;font-size:14px;display:none}
+  </style>
+  <!-- Google model-viewer：跨 iOS/Android 的 WebAR -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+<body>
+  <div class="brand">AR 相機展示</div>
+
+  <model-viewer id="viewer"
+    style="width:100%;height:100%;background:#000"
+    src="assets/camera.glb"
+    ios-src="assets/camera.usdz"
+    ar ar-modes="webxr scene-viewer quick-look"
+    ar-placement="floor"
+    camera-controls
+    disable-zoom
+    exposure="1.0"
+    shadow-intensity="0.6"
+    environment-image="neutral"
+    autoplay>
+    <button slot="ar-button" class="btn" id="arBtn">在實境中查看</button>
+    <div id="unsupported" class="tips">此裝置不支援 AR，改用 3D 檢視。</div>
+  </model-viewer>
+
+  <div class="app" aria-hidden="true" style="pointer-events:none">
+    <div></div>
+    <div class="ui" style="pointer-events:auto">
+      <div class="row">
+        <button class="btn" data-scale="1">實尺(1x)</button>
+        <button class="btn ghost" data-scale="0.8">縮小(0.8x)</button>
+        <button class="btn ghost" data-scale="1.2">放大(1.2x)</button>
+      </div>
+      <div class="note">提示：點「在實境中查看」→ 對著地面移動，找到平面後放置相機模型。</div>
+    </div>
+  </div>
+
+  <script>
+    const mv = document.getElementById('viewer');
+    const tips = document.getElementById('unsupported');
+    (async () => {
+      const canAR = await mv.canActivateAR;
+      if (!canAR) tips.style.display = 'block';
+    })();
+
+    // 快速比例鍵
+    document.querySelectorAll('[data-scale]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const s = parseFloat(btn.dataset.scale);
+        mv.scale = `${s} ${s} ${s}`;
+      });
+    });
+  </script>
+</body>
+</html>
